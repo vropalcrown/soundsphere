@@ -4,7 +4,7 @@
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy, WifiOff, History, RotateCw } from "lucide-react";
+import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy, WifiOff, History, RotateCw, Captions, Loader2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Viewer, VideoHistoryItem } from "@/types";
@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from 'qrcode.react';
 import { Separator } from "@/components/ui/separator";
-
+import { getAiSubtitle } from "@/app/actions";
 
 const initialViewers: Viewer[] = [
     { id: "1", name: "Alice", location: "New York", device: "Mobile", status: "Playing", icon: MonitorSmartphone },
@@ -34,9 +34,23 @@ const initialHistory: VideoHistoryItem[] = [
   { id: "2", title: "For All Mankind", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", poster: "https://placehold.co/1280x720.png" },
 ];
 
+const videoTranscript = [
+  "so what do you think",
+  "i dont know it looks kind of shabby",
+  "shabby you think this is shabby",
+  "well yeah its a bit rough around the edges",
+  "i think it has character",
+  "you would say that",
+  "hey i like things with a little bit of history",
+  "this looks more like a lot of history",
+  "is that a squirrel in the corner",
+  "oh thats just chip he lives here",
+];
+
 
 export default function VideoShareCard() {
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  const subtitleIntervalRef = React.useRef<NodeJS.Timeout>();
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [viewers, setViewers] = React.useState<Viewer[]>(initialViewers);
   const [history, setHistory] = React.useState<VideoHistoryItem[]>(initialHistory);
@@ -45,6 +59,9 @@ export default function VideoShareCard() {
       poster: "https://placehold.co/1280x720.png",
       title: "Big Buck Bunny"
   });
+  const [areSubtitlesEnabled, setAreSubtitlesEnabled] = React.useState(false);
+  const [currentSubtitle, setCurrentSubtitle] = React.useState("");
+  const [isGeneratingSubtitle, setIsGeneratingSubtitle] = React.useState(false);
 
   const { toast } = useToast();
 
@@ -59,6 +76,45 @@ export default function VideoShareCard() {
       }
     }
   };
+  
+  const fetchAndSetSubtitle = React.useCallback(async () => {
+    setIsGeneratingSubtitle(true);
+    try {
+      const transcriptIndex = Math.floor(Math.random() * videoTranscript.length);
+      const transcript = videoTranscript[transcriptIndex];
+      const result = await getAiSubtitle(transcript, currentVideo.title);
+      setCurrentSubtitle(result.subtitle);
+    } catch (error) {
+      console.error("Failed to generate subtitle", error);
+      setCurrentSubtitle("Error generating subtitles.");
+    } finally {
+      setIsGeneratingSubtitle(false);
+    }
+  }, [currentVideo.title]);
+  
+  const toggleSubtitles = () => {
+    setAreSubtitlesEnabled(prev => !prev);
+    setCurrentSubtitle("");
+  };
+
+  React.useEffect(() => {
+    if (areSubtitlesEnabled && isPlaying) {
+      fetchAndSetSubtitle(); 
+      subtitleIntervalRef.current = setInterval(fetchAndSetSubtitle, 5000);
+    } else {
+      if (subtitleIntervalRef.current) {
+        clearInterval(subtitleIntervalRef.current);
+      }
+      setCurrentSubtitle("");
+    }
+    
+    return () => {
+      if (subtitleIntervalRef.current) {
+        clearInterval(subtitleIntervalRef.current);
+      }
+    };
+  }, [areSubtitlesEnabled, isPlaying, fetchAndSetSubtitle]);
+
 
   const updateViewerStatus = (status: "Playing" | "Paused" | "Buffering") => {
     setViewers(viewers.map(v => ({ ...v, status })));
@@ -136,15 +192,31 @@ export default function VideoShareCard() {
           >
             <source src={currentVideo.src} type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="w-16 h-16 text-white/80 hover:text-white hover:bg-white/20 rounded-full"
-              onClick={togglePlayPause}
-            >
-              {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8" />}
-            </Button>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end">
+            <div className="flex-grow flex items-center justify-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="w-16 h-16 text-white/80 hover:text-white hover:bg-white/20 rounded-full"
+                onClick={togglePlayPause}
+              >
+                {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8" />}
+              </Button>
+            </div>
+            {areSubtitlesEnabled && (
+              <div className="text-center p-4 text-white text-lg font-semibold drop-shadow-lg h-20 flex items-center justify-center">
+                {isGeneratingSubtitle && !currentSubtitle ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <p>{currentSubtitle}</p>
+                )}
+              </div>
+            )}
+            <div className="p-2 flex justify-end">
+                <Button variant={areSubtitlesEnabled ? "secondary" : "ghost"} size="icon" onClick={toggleSubtitles} className="text-white/80 hover:text-white hover:bg-white/20">
+                    <Captions className="w-5 h-5" />
+                </Button>
+            </div>
           </div>
         </div>
         
