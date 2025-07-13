@@ -14,6 +14,10 @@ const initialDevices: AudioDevice[] = [
   { id: "2", name: "Logitech Pro X", type: "headphones", selected: false, volume: 30 },
   { id: "3", name: "NVIDIA Broadcast", type: "microphone", selected: false, volume: 60 },
   { id: "4", name: "SteelSeries Sonar", type: "other", selected: false, volume: 50 },
+  { id: "5", name: "Sony WH-1000XM5", type: "headphones", selected: true, volume: 40 },
+  { id: "6", name: "JBL Bluetooth Speaker", type: "speakers", selected: false, volume: 80 },
+  { id: "7", name: "Auxiliary Line-in", type: "other", selected: false, volume: 55 },
+  { id: "8", name: "USB-C DAC", type: "headphones", selected: false, volume: 65 },
 ];
 
 export default function Home() {
