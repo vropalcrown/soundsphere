@@ -1,5 +1,3 @@
-# Firebase Studio
+# AudioSplit
 
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
+A PC app to route audio output simultaneously to multiple headphones and devices. This is a Next.js app bootstrapped with Firebase Studio.
