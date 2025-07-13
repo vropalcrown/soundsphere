@@ -163,7 +163,7 @@ export default function Home() {
                 {selectedDevicesCount > 0 ? `${selectedDevicesCount} device${selectedDevicesCount > 1 ? 's' : ''} selected` : 'No devices selected'}
               </CardDescription>
             </div>
-            <div className="flex gap-2 w-full sm:w-auto">
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
               <Button onClick={handleScanForDevices} disabled={isScanning} variant="outline" className="w-full sm:w-auto">
                 {isScanning ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

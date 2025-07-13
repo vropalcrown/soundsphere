@@ -122,7 +122,7 @@ export default function VideoShareCard() {
     <Card>
       <CardHeader>
         <CardTitle>Video Watch Party</CardTitle>
-        <CardDescription>Share and sync video with friends in the same room or across the globe.</CardDescription>
+        <CardDescription>Share and sync video with friends, whether they're in the same room or across the globe.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
@@ -204,7 +204,7 @@ export default function VideoShareCard() {
         </div>
 
       </CardContent>
-      <CardFooter className="flex gap-2">
+      <CardFooter className="flex flex-col sm:flex-row gap-2">
         <Button variant="secondary" className="w-full" onClick={handleOfflineShare}>
             <WifiOff className="mr-2 h-4 w-4" />
             Offline Share
