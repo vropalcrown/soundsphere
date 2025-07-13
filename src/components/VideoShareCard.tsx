@@ -4,7 +4,7 @@
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy } from "lucide-react";
+import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy, WifiOff } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Viewer } from "@/types";
@@ -86,6 +86,13 @@ export default function VideoShareCard() {
     });
   };
 
+  const handleOfflineShare = () => {
+    toast({
+      title: "Offline Sharing Started",
+      description: "Ready for nearby devices to connect.",
+    });
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -142,7 +149,11 @@ export default function VideoShareCard() {
           </div>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex gap-2">
+        <Button variant="secondary" className="w-full" onClick={handleOfflineShare}>
+            <WifiOff className="mr-2 h-4 w-4" />
+            Offline Share
+        </Button>
         <Dialog>
           <DialogTrigger asChild>
             <Button variant="outline" className="w-full">
