@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { AudioDevice } from "@/types";
 import DeviceItem from "@/components/DeviceItem";
 import { getSuggestedVolumes } from "./actions";
+import VideoShareCard from "@/components/VideoShareCard";
 
 const initialDevices: AudioDevice[] = [
   { id: "1", name: "Realtek HD Audio", type: "speakers", selected: true, volume: 75 },
@@ -134,9 +135,9 @@ export default function Home() {
   const selectedDevicesCount = devices.filter(d => d.selected).length;
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12">
-      <div className="w-full max-w-2xl">
-        <header className="mb-8 text-center">
+    <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12 bg-background">
+      <div className="w-full max-w-2xl space-y-8">
+        <header className="text-center">
           <div className="inline-flex items-center gap-2 mb-2">
             <AudioLines className="h-8 w-8 text-primary" />
             <h1 className="text-4xl font-bold tracking-tight font-headline">
@@ -144,9 +145,11 @@ export default function Home() {
             </h1>
           </div>
           <p className="text-muted-foreground">
-            Route audio to multiple devices simultaneously.
+            Route audio and share video to multiple devices simultaneously.
           </p>
         </header>
+
+        <VideoShareCard />
 
         <Card>
           <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
