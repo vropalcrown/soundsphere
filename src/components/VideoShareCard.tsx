@@ -12,7 +12,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -20,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { QRCodeSVG } from 'qrcode.react';
 
 
 const initialViewers: Viewer[] = [
@@ -154,24 +154,29 @@ export default function VideoShareCard() {
             <DialogHeader>
               <DialogTitle>Share Watch Party</DialogTitle>
               <DialogDescription>
-                Anyone with this link will be able to join your watch party.
+                Anyone with this link can join. Scan the QR code or copy the link.
               </DialogDescription>
             </DialogHeader>
-            <div className="flex items-center space-x-2">
-              <div className="grid flex-1 gap-2">
-                <Label htmlFor="link" className="sr-only">
-                  Link
-                </Label>
-                <Input
-                  id="link"
-                  defaultValue={shareLink}
-                  readOnly
-                />
+            <div className="flex flex-col items-center justify-center gap-4 py-4">
+              <div className="p-4 bg-white rounded-lg">
+                <QRCodeSVG value={shareLink} size={128} />
               </div>
-              <Button type="submit" size="icon" className="px-3" onClick={handleCopyLink}>
-                <span className="sr-only">Copy</span>
-                <Copy className="h-4 w-4" />
-              </Button>
+              <div className="flex items-center space-x-2 w-full">
+                <div className="grid flex-1 gap-2">
+                  <Label htmlFor="link" className="sr-only">
+                    Link
+                  </Label>
+                  <Input
+                    id="link"
+                    defaultValue={shareLink}
+                    readOnly
+                  />
+                </div>
+                <Button type="button" size="icon" className="px-3" onClick={handleCopyLink}>
+                  <span className="sr-only">Copy</span>
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
