@@ -2,32 +2,39 @@
 "use client";
 
 import * as React from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users } from "lucide-react";
+import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import type { Viewer } from "@/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 
-type ViewerStatus = "Playing" | "Paused" | "Buffering";
-
-interface Viewer {
-  id: string;
-  name: string;
-  device: "Mobile" | "Laptop" | "TV";
-  status: ViewerStatus;
-  icon: React.ElementType;
-}
 
 const initialViewers: Viewer[] = [
-  { id: "1", name: "Alex's Phone", device: "Mobile", status: "Playing", icon: MonitorSmartphone },
-  { id: "2", name: "Jordan's Laptop", device: "Laptop", status: "Playing", icon: Laptop },
-  { id: "3", name: "Living Room TV", device: "TV", status: "Playing", icon: Tv },
-];
+    { id: "1", name: "Alice", location: "New York", device: "Mobile", status: "Playing", icon: MonitorSmartphone },
+    { id: "2", name: "Bob", location: "London", device: "Laptop", status: "Playing", icon: Laptop },
+    { id: "3", name: "Charlie", location: "Tokyo", device: "TV", status: "Playing", icon: Tv },
+  ];
 
 export default function VideoShareCard() {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [viewers, setViewers] = React.useState<Viewer[]>(initialViewers);
+  const { toast } = useToast();
+
+  const shareLink = "https://audiosplit.example.com/watch?party=A8B2Z";
 
   const togglePlayPause = () => {
     if (videoRef.current) {
@@ -39,7 +46,7 @@ export default function VideoShareCard() {
     }
   };
 
-  const updateViewerStatus = (status: ViewerStatus) => {
+  const updateViewerStatus = (status: "Playing" | "Paused" | "Buffering") => {
     setViewers(viewers.map(v => ({ ...v, status })));
   };
 
@@ -70,12 +77,20 @@ export default function VideoShareCard() {
       video.removeEventListener("waiting", handleWaiting);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(shareLink);
+    toast({
+      title: "Link Copied!",
+      description: "You can now share the link with your friends.",
+    });
+  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Video Watch Party</CardTitle>
-        <CardDescription>Share and sync video playback across devices in real-time.</CardDescription>
+        <CardDescription>Share and sync video playback with friends near or far.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
@@ -108,7 +123,10 @@ export default function VideoShareCard() {
               <div key={viewer.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/50">
                 <div className="flex items-center gap-3">
                   <viewer.icon className="w-5 h-5 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">{viewer.name}</span>
+                  <div className="text-sm">
+                    <span className="font-medium text-foreground">{viewer.name}</span>
+                    <span className="text-muted-foreground"> ({viewer.location})</span>
+                  </div>
                 </div>
                 <Badge
                   variant={viewer.status === 'Playing' ? 'default' : viewer.status === 'Paused' ? 'secondary' : 'destructive'}
@@ -124,6 +142,40 @@ export default function VideoShareCard() {
           </div>
         </div>
       </CardContent>
+      <CardFooter>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="w-full">
+              <LinkIcon className="mr-2 h-4 w-4" />
+              Invite Friends
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Share Watch Party</DialogTitle>
+              <DialogDescription>
+                Anyone with this link will be able to join your watch party.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex items-center space-x-2">
+              <div className="grid flex-1 gap-2">
+                <Label htmlFor="link" className="sr-only">
+                  Link
+                </Label>
+                <Input
+                  id="link"
+                  defaultValue={shareLink}
+                  readOnly
+                />
+              </div>
+              <Button type="submit" size="icon" className="px-3" onClick={handleCopyLink}>
+                <span className="sr-only">Copy</span>
+                <Copy className="h-4 w-4" />
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </CardFooter>
     </Card>
   );
 }
