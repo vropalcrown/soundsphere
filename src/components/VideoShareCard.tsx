@@ -90,7 +90,7 @@ export default function VideoShareCard() {
     <Card>
       <CardHeader>
         <CardTitle>Video Watch Party</CardTitle>
-        <CardDescription>Share and sync video playback with friends near or far.</CardDescription>
+        <CardDescription>Share and sync video with friends in the same room or across the globe.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
