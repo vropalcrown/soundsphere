@@ -1,7 +1,8 @@
+
 "use client";
 
 import * as React from "react";
-import { Headphones, Loader2, Sparkles, Speaker, Mic, AudioLines } from "lucide-react";
+import { Headphones, Loader2, Sparkles, Speaker, Mic, AudioLines, Bluetooth } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -14,16 +15,13 @@ const initialDevices: AudioDevice[] = [
   { id: "2", name: "Logitech Pro X", type: "headphones", selected: false, volume: 30 },
   { id: "3", name: "NVIDIA Broadcast", type: "microphone", selected: false, volume: 60 },
   { id: "4", name: "SteelSeries Sonar", type: "other", selected: false, volume: 50 },
-  { id: "5", name: "Sony WH-1000XM5", type: "headphones", selected: true, volume: 40 },
-  { id: "6", name: "JBL Bluetooth Speaker", type: "speakers", selected: false, volume: 80 },
-  { id: "7", name: "Auxiliary Line-in", type: "other", selected: false, volume: 55 },
-  { id: "8", name: "USB-C DAC", type: "headphones", selected: false, volume: 65 },
 ];
 
 export default function Home() {
   const [devices, setDevices] = React.useState<AudioDevice[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSuggesting, setIsSuggesting] = React.useState(false);
+  const [isScanning, setIsScanning] = React.useState(false);
   const { toast } = useToast();
 
   React.useEffect(() => {
@@ -105,6 +103,33 @@ export default function Home() {
       setIsSuggesting(false);
     }
   };
+  
+  const handleScanForDevices = () => {
+    setIsScanning(true);
+    toast({
+      title: "Scanning for devices...",
+      description: "Looking for new Bluetooth devices in range.",
+    });
+
+    setTimeout(() => {
+      const newDevice: AudioDevice = {
+        id: (devices.length + 1).toString(),
+        name: "Bose QuietComfort",
+        type: "headphones",
+        selected: false,
+        volume: 50,
+      };
+      
+      setDevices(prev => [...prev, newDevice]);
+      
+      toast({
+        title: "Device Found!",
+        description: `${newDevice.name} has been added to your device list.`,
+      });
+
+      setIsScanning(false);
+    }, 2000);
+  };
 
   const selectedDevicesCount = devices.filter(d => d.selected).length;
 
@@ -124,21 +149,31 @@ export default function Home() {
         </header>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
+          <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-4">
             <div>
               <CardTitle>Audio Output Group</CardTitle>
               <CardDescription>
                 {selectedDevicesCount > 0 ? `${selectedDevicesCount} device${selectedDevicesCount > 1 ? 's' : ''} selected` : 'No devices selected'}
               </CardDescription>
             </div>
-            <Button onClick={handleSuggestVolumes} disabled={isSuggesting}>
-              {isSuggesting ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <Sparkles className="mr-2 h-4 w-4" />
-              )}
-              Suggest Volumes
-            </Button>
+            <div className="flex gap-2 w-full sm:w-auto">
+              <Button onClick={handleScanForDevices} disabled={isScanning} variant="outline" className="w-full sm:w-auto">
+                {isScanning ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Bluetooth className="mr-2 h-4 w-4" />
+                )}
+                Scan
+              </Button>
+              <Button onClick={handleSuggestVolumes} disabled={isSuggesting || isScanning} className="w-full sm:w-auto">
+                {isSuggesting ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="mr-2 h-4 w-4" />
+                )}
+                Suggest Volumes
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {isLoading ? (
