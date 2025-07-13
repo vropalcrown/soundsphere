@@ -3,8 +3,8 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'AudioSplit',
-  description: 'Route audio to multiple devices simultaneously.',
+  title: 'SyncSphere',
+  description: 'Route audio and share video to multiple devices simultaneously.',
 };
 
 export default function RootLayout({

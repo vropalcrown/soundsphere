@@ -145,7 +145,7 @@ export default function Home() {
           <div className="inline-flex items-center gap-2 mb-2">
             <AudioLines className="h-8 w-8 text-primary" />
             <h1 className="text-4xl font-bold tracking-tight font-headline">
-              AudioSplit
+              SyncSphere
             </h1>
           </div>
           <p className="text-muted-foreground">
