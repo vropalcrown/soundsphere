@@ -16,6 +16,10 @@ const initialDevices: AudioDevice[] = [
   { id: "2", name: "Logitech Pro X", type: "headphones", selected: false, volume: 30 },
   { id: "3", name: "NVIDIA Broadcast", type: "microphone", selected: false, volume: 60 },
   { id: "4", name: "SteelSeries Sonar", type: "other", selected: false, volume: 50 },
+  { id: "5", name: "Sony WH-1000XM4", type: "headphones", selected: false, volume: 40 },
+  { id: "6", name: "Monitor Speakers", type: "speakers", selected: false, volume: 80 },
+  { id: "7", name: "Blue Yeti", type: "microphone", selected: true, volume: 65 },
+  { id: "8", name: "Auxiliary Device", type: "other", selected: false, volume: 55 },
 ];
 
 export default function Home() {
@@ -136,7 +140,7 @@ export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12 bg-background">
-      <div className="w-full max-w-2xl space-y-8">
+      <div className="w-full max-w-4xl space-y-8">
         <header className="text-center">
           <div className="inline-flex items-center gap-2 mb-2">
             <AudioLines className="h-8 w-8 text-primary" />

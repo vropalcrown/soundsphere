@@ -17,3 +17,10 @@ export interface Viewer {
   status: ViewerStatus;
   icon: React.ElementType;
 }
+
+export interface VideoHistoryItem {
+  id: string;
+  title: string;
+  src: string;
+  poster: string;
+}

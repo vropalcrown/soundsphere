@@ -4,10 +4,10 @@
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy, WifiOff } from "lucide-react";
+import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy, WifiOff, History, RotateCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import type { Viewer } from "@/types";
+import type { Viewer, VideoHistoryItem } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from 'qrcode.react';
+import { Separator } from "@/components/ui/separator";
 
 
 const initialViewers: Viewer[] = [
@@ -28,10 +29,23 @@ const initialViewers: Viewer[] = [
     { id: "3", name: "Charlie", location: "Tokyo", device: "TV", status: "Playing", icon: Tv },
   ];
 
+const initialHistory: VideoHistoryItem[] = [
+  { id: "1", title: "Elephants Dream", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", poster: "https://placehold.co/1280x720.png" },
+  { id: "2", title: "For All Mankind", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", poster: "https://placehold.co/1280x720.png" },
+];
+
+
 export default function VideoShareCard() {
   const videoRef = React.useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = React.useState(false);
   const [viewers, setViewers] = React.useState<Viewer[]>(initialViewers);
+  const [history, setHistory] = React.useState<VideoHistoryItem[]>(initialHistory);
+  const [currentVideo, setCurrentVideo] = React.useState({
+      src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4",
+      poster: "https://placehold.co/1280x720.png",
+      title: "Big Buck Bunny"
+  });
+
   const { toast } = useToast();
 
   const shareLink = "https://audiosplit.example.com/watch?party=A8B2Z";
@@ -93,6 +107,17 @@ export default function VideoShareCard() {
     });
   }
 
+  const handleLoadVideo = (video: VideoHistoryItem) => {
+    setCurrentVideo({ src: video.src, poster: video.poster, title: video.title });
+    if(videoRef.current) {
+        videoRef.current.load();
+        toast({
+            title: "Video Loaded",
+            description: `"${video.title}" is ready to play.`,
+        });
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -103,12 +128,14 @@ export default function VideoShareCard() {
         <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
           <video
             ref={videoRef}
+            key={currentVideo.src}
             className="w-full h-full object-cover"
-            src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
-            poster="https://placehold.co/1280x720.png"
+            poster={currentVideo.poster}
             data-ai-hint="nature movie"
             controls={false}
-          />
+          >
+            <source src={currentVideo.src} type="video/mp4" />
+          </video>
           <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
             <Button
               variant="ghost"
@@ -120,34 +147,62 @@ export default function VideoShareCard() {
             </Button>
           </div>
         </div>
-        <div>
-          <h3 className="text-sm font-medium mb-2 flex items-center gap-2 text-muted-foreground">
-            <Users className="w-4 h-4" />
-            Synced Viewers ({viewers.length})
-          </h3>
-          <div className="space-y-2">
-            {viewers.map((viewer) => (
-              <div key={viewer.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/50">
-                <div className="flex items-center gap-3">
-                  <viewer.icon className="w-5 h-5 text-muted-foreground" />
-                  <div className="text-sm">
-                    <span className="font-medium text-foreground">{viewer.name}</span>
-                    <span className="text-muted-foreground"> ({viewer.location})</span>
+        
+        <Separator />
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h3 className="text-sm font-medium mb-2 flex items-center gap-2 text-muted-foreground">
+                <Users className="w-4 h-4" />
+                Synced Viewers ({viewers.length})
+              </h3>
+              <div className="space-y-2">
+                {viewers.map((viewer) => (
+                  <div key={viewer.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/50">
+                    <div className="flex items-center gap-3">
+                      <viewer.icon className="w-5 h-5 text-muted-foreground" />
+                      <div className="text-sm">
+                        <span className="font-medium text-foreground">{viewer.name}</span>
+                        <span className="text-muted-foreground"> ({viewer.location})</span>
+                      </div>
+                    </div>
+                    <Badge
+                      variant={viewer.status === 'Playing' ? 'default' : viewer.status === 'Paused' ? 'secondary' : 'destructive'}
+                      className={cn("transition-colors", {
+                        "bg-green-500/20 text-green-700 border-green-500/30 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20": viewer.status === "Playing",
+                        "bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-500/20": viewer.status === "Buffering",
+                      })}
+                    >
+                      {viewer.status}
+                    </Badge>
                   </div>
-                </div>
-                <Badge
-                  variant={viewer.status === 'Playing' ? 'default' : viewer.status === 'Paused' ? 'secondary' : 'destructive'}
-                  className={cn("transition-colors", {
-                    "bg-green-500/20 text-green-700 border-green-500/30 dark:bg-green-500/10 dark:text-green-400 dark:border-green-500/20": viewer.status === "Playing",
-                    "bg-yellow-500/20 text-yellow-700 border-yellow-500/30 dark:bg-yellow-500/10 dark:text-yellow-400 dark:border-yellow-500/20": viewer.status === "Buffering",
-                  })}
-                >
-                  {viewer.status}
-                </Badge>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+
+            <div>
+              <h3 className="text-sm font-medium mb-2 flex items-center gap-2 text-muted-foreground">
+                <History className="w-4 h-4" />
+                Watch History
+              </h3>
+              <div className="space-y-2">
+                {history.map((video) => (
+                  <div key={video.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/50">
+                    <div className="flex items-center gap-3">
+                      <div className="text-sm">
+                        <span className="font-medium text-foreground">{video.title}</span>
+                      </div>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => handleLoadVideo(video)}>
+                        <RotateCw className="mr-2 h-4 w-4" />
+                        Load
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            </div>
         </div>
+
       </CardContent>
       <CardFooter className="flex gap-2">
         <Button variant="secondary" className="w-full" onClick={handleOfflineShare}>
