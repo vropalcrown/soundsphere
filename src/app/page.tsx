@@ -5,6 +5,7 @@ import * as React from "react";
 import { AudioLines } from "lucide-react";
 import VideoShareCard from "@/components/VideoShareCard";
 import AudioOutputGroupCard from "@/components/AudioOutputGroupCard";
+import SystemAudioCard from "@/components/SystemAudioCard";
 
 export default function Home() {
   return (
@@ -22,6 +23,7 @@ export default function Home() {
           </p>
         </header>
 
+        <SystemAudioCard />
         <VideoShareCard />
         <AudioOutputGroupCard />
 
