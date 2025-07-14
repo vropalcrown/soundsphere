@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { Download, ArrowRight, HelpCircle } from "lucide-react";
+import { Download, ArrowRight, HelpCircle, Wifi } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -16,21 +16,29 @@ import { useToast } from "@/hooks/use-toast";
 export default function InstallCard() {
   const installPromptRef = React.useRef<any>(null);
   const [isSupported, setIsSupported] = React.useState(false);
+  const [isOfflineReady, setIsOfflineReady] = React.useState(false);
   const { toast } = useToast();
 
   React.useEffect(() => {
+    // Check if a service worker is active, which indicates offline capability
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      setIsOfflineReady(true);
+    }
+    
+    // Check for PWA installability support
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       installPromptRef.current = e;
       setIsSupported(true);
     };
 
-    // Check for browser support
-    if ('onbeforeinstallprompt' in window) {
-      setIsSupported(true);
-    }
-
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    // This is a simple check; a more robust one might check user agent strings
+    if (typeof (window as any).InstallTrigger !== 'undefined') {
+      // This is Firefox, which supports offline but not the install prompt
+      setIsSupported(false);
+    }
 
     return () => {
       window.removeEventListener(
@@ -76,23 +84,30 @@ export default function InstallCard() {
       <CardHeader>
         <div className="flex items-center gap-3 mb-2">
           <div className="p-2 bg-primary/10 rounded-md">
-            {isSupported ? <Download className="h-6 w-6 text-primary" /> : <HelpCircle className="h-6 w-6 text-primary" />}
+            {isSupported ? <Download className="h-6 w-6 text-primary" /> : <Wifi className="h-6 w-6 text-primary" />}
           </div>
-          <CardTitle>Install SyncSphere</CardTitle>
+          <CardTitle>App Installation & Offline Mode</CardTitle>
         </div>
         <CardDescription>
           {isSupported
             ? "Get the best experience by installing the SyncSphere app on your device. It's fast, works offline, and feels like a native app."
-            : "Your browser does not support direct installation. To add this app to your desktop, you can create a shortcut from your browser's menu."}
+            : "This app works offline! Just visit once while connected to the internet, and it will be ready for later use without a connection."}
         </CardDescription>
       </CardHeader>
-      {isSupported && (
-        <CardContent>
-          <Button className="w-full" onClick={handleInstallClick}>
-            Install App on Your Device <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+      <CardContent>
+          {isSupported ? (
+            <Button className="w-full" onClick={handleInstallClick}>
+              Install App on Your Device <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : (
+            <div className="flex items-center justify-center p-2 rounded-md bg-secondary text-secondary-foreground">
+                <Wifi className="mr-2 h-4 w-4" />
+                <span className="text-sm font-medium">
+                    {isOfflineReady ? "App is ready for offline use." : "Connect to the internet once to enable offline mode."}
+                </span>
+            </div>
+          )}
         </CardContent>
-      )}
     </Card>
   );
 }
