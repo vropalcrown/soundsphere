@@ -54,19 +54,19 @@ export default function AudioOutputGroupCard() {
     }
   }, [devices, isLoading]);
 
-  const handleToggleDevice = (id: string) => {
+  const handleToggleDevice = React.useCallback((id: string) => {
     setDevices(
-      devices.map((d) => (d.id === id ? { ...d, selected: !d.selected } : d))
+      (currentDevices) => currentDevices.map((d) => (d.id === id ? { ...d, selected: !d.selected } : d))
     );
-  };
+  }, []);
 
-  const handleVolumeChange = (id: string, volume: number[]) => {
+  const handleVolumeChange = React.useCallback((id: string, volume: number[]) => {
     setDevices(
-      devices.map((d) => (d.id === id ? { ...d, volume: volume[0] } : d))
+      (currentDevices) => currentDevices.map((d) => (d.id === id ? { ...d, volume: volume[0] } : d))
     );
-  };
+  }, []);
   
-  const handleFeatureSettingsChange = (id: string, newSettings: AudioDevice['featureSettings']) => {
+  const handleFeatureSettingsChange = React.useCallback((id: string, newSettings: AudioDevice['featureSettings']) => {
     setDevices(prevDevices =>
       prevDevices.map(d =>
         d.id === id
@@ -84,7 +84,7 @@ export default function AudioOutputGroupCard() {
       title: "Settings Updated",
       description: `Audio features for ${devices.find(d => d.id === id)?.name} have been updated.`,
     });
-  };
+  }, [devices, toast]);
 
   const handleSuggestVolumes = async () => {
     const selectedDevices = devices.filter((d) => d.selected);

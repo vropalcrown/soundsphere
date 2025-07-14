@@ -94,7 +94,7 @@ const AudioFeatureSettingsDialog: React.FC<AudioFeatureSettingsDialogProps> = ({
     );
 }
 
-export default function DeviceItem({
+const DeviceItem = React.memo(function DeviceItem({
   device,
   onToggle,
   onVolumeChange,
@@ -162,4 +162,6 @@ export default function DeviceItem({
       </Card>
     </Collapsible>
   );
-}
+});
+
+export default DeviceItem;
