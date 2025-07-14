@@ -4,7 +4,7 @@
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy, WifiOff, History, RotateCw, Captions, Loader2 } from "lucide-react";
+import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy, WifiOff, History, RotateCw, Captions, Loader2, Languages, FileSearch } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Viewer, VideoHistoryItem } from "@/types";
@@ -21,7 +21,13 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { QRCodeSVG } from 'qrcode.react';
 import { Separator } from "@/components/ui/separator";
-import { getAiSubtitle } from "@/app/actions";
+import { getAiSubtitle, findOriginalSubtitles } from "@/app/actions";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 const initialViewers: Viewer[] = [
     { id: "1", name: "Alice", location: "New York", device: "Mobile", status: "Playing", icon: MonitorSmartphone },
@@ -62,6 +68,9 @@ export default function VideoShareCard() {
   const [areSubtitlesEnabled, setAreSubtitlesEnabled] = React.useState(false);
   const [currentSubtitle, setCurrentSubtitle] = React.useState("");
   const [isGeneratingSubtitle, setIsGeneratingSubtitle] = React.useState(false);
+  const [subtitleLanguage, setSubtitleLanguage] = React.useState<string>();
+  const [isFindingSubtitles, setIsFindingSubtitles] = React.useState(false);
+
 
   const { toast } = useToast();
 
@@ -82,7 +91,7 @@ export default function VideoShareCard() {
     try {
       const transcriptIndex = Math.floor(Math.random() * videoTranscript.length);
       const transcript = videoTranscript[transcriptIndex];
-      const result = await getAiSubtitle(transcript, currentVideo.title);
+      const result = await getAiSubtitle(transcript, currentVideo.title, subtitleLanguage);
       setCurrentSubtitle(result.subtitle);
     } catch (error) {
       console.error("Failed to generate subtitle", error);
@@ -90,11 +99,17 @@ export default function VideoShareCard() {
     } finally {
       setIsGeneratingSubtitle(false);
     }
-  }, [currentVideo.title]);
+  }, [currentVideo.title, subtitleLanguage]);
   
   const toggleSubtitles = () => {
-    setAreSubtitlesEnabled(prev => !prev);
-    setCurrentSubtitle("");
+    setAreSubtitlesEnabled(prev => {
+        const newState = !prev;
+        if (!newState) {
+            setSubtitleLanguage(undefined);
+            setCurrentSubtitle("");
+        }
+        return newState;
+    });
   };
 
   React.useEffect(() => {
@@ -105,7 +120,9 @@ export default function VideoShareCard() {
       if (subtitleIntervalRef.current) {
         clearInterval(subtitleIntervalRef.current);
       }
-      setCurrentSubtitle("");
+      if (!areSubtitlesEnabled) {
+          setCurrentSubtitle("");
+      }
     }
     
     return () => {
@@ -174,6 +191,42 @@ export default function VideoShareCard() {
     }
   };
 
+  const handleFindSubtitles = async () => {
+    setIsFindingSubtitles(true);
+    toast({
+      title: "Searching for subtitles...",
+      description: `Looking for original subtitles for "${currentVideo.title}".`
+    });
+    try {
+        const result = await findOriginalSubtitles(currentVideo.title);
+        if (result.subtitleTrack) {
+            setAreSubtitlesEnabled(true);
+            setSubtitleLanguage(undefined);
+            if (subtitleIntervalRef.current) clearInterval(subtitleIntervalRef.current);
+            setCurrentSubtitle(result.subtitleTrack);
+            toast({
+                title: "Subtitles Found!",
+                description: "Original subtitle track has been loaded."
+            });
+        } else {
+            toast({
+                variant: "destructive",
+                title: "Not Found",
+                description: result.message
+            });
+        }
+    } catch (error) {
+        console.error("Failed to find subtitles", error);
+        toast({
+            variant: "destructive",
+            title: "Error",
+            description: "An unexpected error occurred while searching for subtitles."
+        });
+    } finally {
+        setIsFindingSubtitles(false);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -208,14 +261,31 @@ export default function VideoShareCard() {
                 {isGeneratingSubtitle && !currentSubtitle ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
-                  <p>{currentSubtitle}</p>
+                  <p className="line-clamp-3">{currentSubtitle}</p>
                 )}
               </div>
             )}
-            <div className="p-2 flex justify-end">
+            <div className="p-2 flex items-center justify-end gap-2">
+                <Button variant="ghost" size="icon" onClick={handleFindSubtitles} disabled={isFindingSubtitles} className="text-white/80 hover:text-white hover:bg-white/20">
+                    {isFindingSubtitles ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileSearch className="w-5 h-5" />}
+                </Button>
                 <Button variant={areSubtitlesEnabled ? "secondary" : "ghost"} size="icon" onClick={toggleSubtitles} className="text-white/80 hover:text-white hover:bg-white/20">
                     <Captions className="w-5 h-5" />
                 </Button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" disabled={!areSubtitlesEnabled} className="text-white/80 hover:text-white hover:bg-white/20">
+                        <Languages className="w-5 h-5" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    <DropdownMenuItem onClick={() => setSubtitleLanguage(undefined)}>English (Generated)</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSubtitleLanguage('Spanish')}>Spanish</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSubtitleLanguage('French')}>French</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSubtitleLanguage('Japanese')}>Japanese</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => setSubtitleLanguage('German')}>German</DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
             </div>
           </div>
         </div>
@@ -246,7 +316,7 @@ export default function VideoShareCard() {
                       })}
                     >
                       {viewer.status}
-                    </Badge>
+                    </badge>
                   </div>
                 ))}
               </div>
