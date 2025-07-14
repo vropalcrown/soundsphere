@@ -62,8 +62,8 @@ export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12 bg-background">
       <div className="w-full max-w-4xl space-y-8">
-        <header className="text-center relative">
-            <div className="inline-flex flex-col items-center">
+        <header className="relative w-full flex justify-center items-center py-4">
+            <div className="text-center">
                 <div className="inline-flex items-center gap-2 mb-2">
                     <svg
                     role="img"
