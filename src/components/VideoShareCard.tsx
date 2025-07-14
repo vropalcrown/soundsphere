@@ -85,7 +85,7 @@ export default function VideoShareCard() {
       }
     }
   };
-  
+
   const fetchAndSetSubtitle = React.useCallback(async () => {
     setIsGeneratingSubtitle(true);
     try {
@@ -100,7 +100,7 @@ export default function VideoShareCard() {
       setIsGeneratingSubtitle(false);
     }
   }, [currentVideo.title, subtitleLanguage]);
-  
+
   const toggleSubtitles = () => {
     setAreSubtitlesEnabled(prev => {
         const newState = !prev;
@@ -114,7 +114,7 @@ export default function VideoShareCard() {
 
   React.useEffect(() => {
     if (areSubtitlesEnabled && isPlaying) {
-      fetchAndSetSubtitle(); 
+      fetchAndSetSubtitle();
       subtitleIntervalRef.current = setInterval(fetchAndSetSubtitle, 5000);
     } else {
       if (subtitleIntervalRef.current) {
@@ -124,7 +124,7 @@ export default function VideoShareCard() {
           setCurrentSubtitle("");
       }
     }
-    
+
     return () => {
       if (subtitleIntervalRef.current) {
         clearInterval(subtitleIntervalRef.current);
@@ -164,7 +164,7 @@ export default function VideoShareCard() {
       video.removeEventListener("waiting", handleWaiting);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
-  
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareLink);
     toast({
@@ -289,9 +289,9 @@ export default function VideoShareCard() {
             </div>
           </div>
         </div>
-        
+
         <Separator />
-        
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-sm font-medium mb-2 flex items-center gap-2 text-muted-foreground">
@@ -316,7 +316,7 @@ export default function VideoShareCard() {
                       })}
                     >
                       {viewer.status}
-                    </badge>
+                    </Badge>
                   </div>
                 ))}
               </div>
@@ -347,13 +347,13 @@ export default function VideoShareCard() {
 
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row gap-2">
-        <Button variant="secondary" className="w-full" onClick={handleOfflineShare}>
+        <Button variant="secondary" className="w-full sm:w-auto" onClick={handleOfflineShare}>
             <WifiOff className="mr-2 h-4 w-4" />
             Offline Share
         </Button>
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full sm:w-auto">
               <LinkIcon className="mr-2 h-4 w-4" />
               Invite Friends
             </Button>
@@ -392,3 +392,5 @@ export default function VideoShareCard() {
     </Card>
   );
 }
+
+    

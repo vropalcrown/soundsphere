@@ -108,7 +108,7 @@ export default function Home() {
       setIsSuggesting(false);
     }
   };
-  
+
   const handleScanForDevices = () => {
     setIsScanning(true);
     toast({
@@ -124,9 +124,9 @@ export default function Home() {
         selected: false,
         volume: 50,
       };
-      
+
       setDevices(prev => [...prev, newDevice]);
-      
+
       toast({
         title: "Device Found!",
         description: `${newDevice.name} has been added to your device list.`,
@@ -211,3 +211,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
