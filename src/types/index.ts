@@ -1,10 +1,19 @@
 
+export type AudioFeature = "dolbyAtmos" | "spatialAudio" | "stereo";
+
 export type AudioDevice = {
   id: string;
   name: string;
   type: "headphones" | "speakers" | "microphone" | "other";
   selected: boolean;
   volume: number;
+  supportedFeatures?: AudioFeature[];
+  featureSettings?: {
+    spatialAudio?: {
+      enabled: boolean;
+      headTracking: boolean;
+    };
+  };
 };
 
 export type ViewerStatus = "Playing" | "Paused" | "Buffering";

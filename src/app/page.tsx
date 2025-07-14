@@ -12,14 +12,14 @@ import { getSuggestedVolumes } from "./actions";
 import VideoShareCard from "@/components/VideoShareCard";
 
 const initialDevices: AudioDevice[] = [
-  { id: "1", name: "Realtek HD Audio", type: "speakers", selected: true, volume: 75 },
-  { id: "2", name: "Logitech Pro X", type: "headphones", selected: false, volume: 30 },
+  { id: "1", name: "Realtek HD Audio", type: "speakers", selected: true, volume: 75, supportedFeatures: ["stereo"] },
+  { id: "2", name: "Logitech Pro X", type: "headphones", selected: false, volume: 30, supportedFeatures: ["stereo"] },
   { id: "3", name: "NVIDIA Broadcast", type: "microphone", selected: false, volume: 60 },
   { id: "4", name: "SteelSeries Sonar", type: "other", selected: false, volume: 50 },
-  { id: "5", name: "Sony WH-1000XM4", type: "headphones", selected: false, volume: 40 },
-  { id: "6", name: "Monitor Speakers", type: "speakers", selected: false, volume: 80 },
+  { id: "5", name: "Sony WH-1000XM4", type: "headphones", selected: false, volume: 40, supportedFeatures: ["spatialAudio", "stereo"], featureSettings: { spatialAudio: { enabled: false, headTracking: true } } },
+  { id: "6", name: "Monitor Speakers", type: "speakers", selected: false, volume: 80, supportedFeatures: ["stereo"] },
   { id: "7", name: "Blue Yeti", type: "microphone", selected: true, volume: 65 },
-  { id: "8", name: "Auxiliary Device", type: "other", selected: false, volume: 55 },
+  { id: "8", name: "Home Theatre System", type: "other", selected: false, volume: 85, supportedFeatures: ["dolbyAtmos", "stereo"] },
 ];
 
 export default function Home() {
@@ -65,6 +65,26 @@ export default function Home() {
     setDevices(
       devices.map((d) => (d.id === id ? { ...d, volume: volume[0] } : d))
     );
+  };
+  
+  const handleFeatureSettingsChange = (id: string, newSettings: AudioDevice['featureSettings']) => {
+    setDevices(prevDevices =>
+      prevDevices.map(d =>
+        d.id === id
+          ? {
+              ...d,
+              featureSettings: {
+                ...d.featureSettings,
+                ...newSettings,
+              },
+            }
+          : d
+      )
+    );
+     toast({
+      title: "Settings Updated",
+      description: `Audio features for ${devices.find(d => d.id === id)?.name} have been updated.`,
+    });
   };
 
   const handleSuggestVolumes = async () => {
@@ -123,6 +143,8 @@ export default function Home() {
         type: "headphones",
         selected: false,
         volume: 50,
+        supportedFeatures: ["spatialAudio", "stereo"],
+        featureSettings: { spatialAudio: { enabled: true, headTracking: false } }
       };
 
       setDevices(prev => [...prev, newDevice]);
@@ -196,6 +218,7 @@ export default function Home() {
                       device={device}
                       onToggle={handleToggleDevice}
                       onVolumeChange={handleVolumeChange}
+                      onFeatureSettingsChange={handleFeatureSettingsChange}
                     />
                   ))
                 ) : (
@@ -211,5 +234,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
