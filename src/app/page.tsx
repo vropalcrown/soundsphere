@@ -14,17 +14,28 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 
-export default function Home() {
+function InstallCard() {
   const [installPrompt, setInstallPrompt] = React.useState<any>(null);
+  const [isVisible, setIsVisible] = React.useState(false);
   const { toast } = useToast();
 
   React.useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setInstallPrompt(e);
+      setIsVisible(true);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    // Also check if running as a PWA already
+    if (window.matchMedia('(display-mode: standalone)').matches) {
+      setIsVisible(false);
+    } else {
+      // Small delay to allow the prompt to be set
+      setTimeout(() => setIsVisible(true), 1000);
+    }
+
 
     return () => {
       window.removeEventListener(
@@ -36,10 +47,11 @@ export default function Home() {
 
   const handleInstallClick = async () => {
     if (!installPrompt) {
-       toast({
+      toast({
         variant: "destructive",
-        title: "Installation Not Available",
-        description: "Your browser does not support PWA installation, or the app is already installed.",
+        title: "Already Installed or Not Supported",
+        description:
+          "The app may already be installed, or your browser doesn't support this feature.",
       });
       return;
     }
@@ -50,14 +62,44 @@ export default function Home() {
         title: "Installation Complete!",
         description: "SyncSphere has been added to your device.",
       });
+      setIsVisible(false);
     } else {
-       toast({
+      toast({
         title: "Installation Cancelled",
-        description: "You can install the app any time from the address bar.",
+        description: "You can install the app any time.",
       });
     }
     setInstallPrompt(null);
   };
+  
+  if (!isVisible && !installPrompt) {
+    return null; // Don't show the card if not applicable
+  }
+
+  return (
+     <Card className="md:col-span-2 border-primary/40 bg-primary/5">
+        <CardHeader>
+            <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-primary/10 rounded-md">
+                <Download className="h-6 w-6 text-primary" />
+            </div>
+            <CardTitle>Install SyncSphere</CardTitle>
+            </div>
+            <CardDescription>
+                Get the best experience by installing the SyncSphere app directly on your device. It's fast, works offline, and feels like a native app.
+            </CardDescription>
+        </CardHeader>
+        <CardContent>
+            <Button className="w-full" onClick={handleInstallClick} disabled={!installPrompt}>
+              Install App on Your Device <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+        </CardContent>
+    </Card>
+  )
+}
+
+
+export default function Home() {
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12 bg-background">
@@ -83,17 +125,11 @@ export default function Home() {
                     Route audio, share video, and sync experiences seamlessly.
                 </p>
             </div>
-             {installPrompt && (
-                <div className="absolute top-0 right-0">
-                    <Button variant="outline" onClick={handleInstallClick}>
-                        <Download className="mr-2 h-4 w-4" />
-                        Install App
-                    </Button>
-                </div>
-            )}
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <InstallCard />
+
           <Card className="hover:border-primary/60 transition-colors">
             <CardHeader>
               <div className="flex items-center gap-3 mb-2">
