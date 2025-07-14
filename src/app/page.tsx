@@ -16,21 +16,20 @@ import { useToast } from "@/hooks/use-toast";
 
 function InstallCard() {
   const [installPrompt, setInstallPrompt] = React.useState<any>(null);
-  const [isVisible, setIsVisible] = React.useState(false);
   const { toast } = useToast();
 
   React.useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the browser's default installation prompt
       e.preventDefault();
+      // Store the event so it can be triggered later
       setInstallPrompt(e);
-      // Only show the card if not already installed
-      if (!window.matchMedia('(display-mode: standalone)').matches) {
-        setIsVisible(true);
-      }
     };
 
+    // Listen for the event
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
+    // Clean up the event listener when the component unmounts
     return () => {
       window.removeEventListener(
         "beforeinstallprompt",
@@ -50,7 +49,10 @@ function InstallCard() {
       return;
     }
     
+    // Show the browser's installation prompt
     installPrompt.prompt();
+    
+    // Wait for the user to respond to the prompt
     const { outcome } = await installPrompt.userChoice;
     
     if (outcome === "accepted") {
@@ -58,19 +60,16 @@ function InstallCard() {
         title: "Installation Complete!",
         description: "SyncSphere has been successfully installed.",
       });
-      setIsVisible(false);
     } else {
        toast({
         title: "Installation Cancelled",
         description: "You can install the app any time from the main page.",
       });
     }
+    
+    // We can only use the install prompt once. Clear it.
     setInstallPrompt(null);
   };
-  
-  if (!isVisible) {
-    return null;
-  }
 
   return (
      <Card className="md:col-span-2 border-primary/40 bg-primary/5">
