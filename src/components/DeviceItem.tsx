@@ -34,7 +34,13 @@ const featureDisplay: Record<AudioFeature, { name: string, icon: React.ElementTy
     stereo: { name: "Stereo", icon: Speaker }
 }
 
-const AudioFeatureSettingsDialog = ({ device, onSettingsChange, children }: { device: AudioDevice, onSettingsChange: (newSettings: AudioDevice['featureSettings']) => void, children: React.ReactNode }) => {
+interface AudioFeatureSettingsDialogProps {
+  device: AudioDevice;
+  onSettingsChange: (newSettings: AudioDevice['featureSettings']) => void;
+  children: React.ReactNode;
+}
+
+const AudioFeatureSettingsDialog: React.FC<AudioFeatureSettingsDialogProps> = ({ device, onSettingsChange, children }) => {
     const [spatialEnabled, setSpatialEnabled] = React.useState(device.featureSettings?.spatialAudio?.enabled ?? false);
     const [headTracking, setHeadTracking] = React.useState(device.featureSettings?.spatialAudio?.headTracking ?? false);
 
