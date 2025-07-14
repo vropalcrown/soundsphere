@@ -14,21 +14,19 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 
 export default function InstallCard() {
-  const [installPrompt, setInstallPrompt] = React.useState<any>(null);
+  const installPromptRef = React.useRef<any>(null);
+  const [isInstallable, setIsInstallable] = React.useState(false);
   const { toast } = useToast();
 
   React.useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
-      // Prevent the browser's default installation prompt
       e.preventDefault();
-      // Store the event so it can be triggered later
-      setInstallPrompt(e);
+      installPromptRef.current = e;
+      setIsInstallable(true);
     };
 
-    // Listen for the event
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // Clean up the event listener when the component unmounts
     return () => {
       window.removeEventListener(
         "beforeinstallprompt",
@@ -38,7 +36,7 @@ export default function InstallCard() {
   }, []);
 
   const handleInstallClick = async () => {
-    if (!installPrompt) {
+    if (!installPromptRef.current) {
       toast({
         variant: "destructive",
         title: "Installation Not Available",
@@ -47,12 +45,11 @@ export default function InstallCard() {
       });
       return;
     }
+
+    const prompt = installPromptRef.current;
+    prompt.prompt();
     
-    // Show the browser's installation prompt
-    installPrompt.prompt();
-    
-    // Wait for the user to respond to the prompt
-    const { outcome } = await installPrompt.userChoice;
+    const { outcome } = await prompt.userChoice;
     
     if (outcome === "accepted") {
       toast({
@@ -66,13 +63,9 @@ export default function InstallCard() {
       });
     }
     
-    // We can only use the install prompt once. Clear it.
-    setInstallPrompt(null);
+    installPromptRef.current = null;
+    setIsInstallable(false);
   };
-
-  if (!installPrompt) {
-    return null;
-  }
 
   return (
      <Card className="md:col-span-2 border-primary/40 bg-primary/5">
@@ -88,10 +81,10 @@ export default function InstallCard() {
             </CardDescription>
         </CardHeader>
         <CardContent>
-            <Button className="w-full" onClick={handleInstallClick}>
+            <Button className="w-full" onClick={handleInstallClick} disabled={!isInstallable}>
               Install App on Your Device <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
         </CardContent>
     </Card>
-  )
+  );
 }
