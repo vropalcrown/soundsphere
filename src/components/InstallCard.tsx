@@ -15,14 +15,12 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function InstallCard() {
   const installPromptRef = React.useRef<any>(null);
-  const [isInstallable, setIsInstallable] = React.useState(false);
   const { toast } = useToast();
 
   React.useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       installPromptRef.current = e;
-      setIsInstallable(true);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
@@ -64,7 +62,6 @@ export default function InstallCard() {
     }
     
     installPromptRef.current = null;
-    setIsInstallable(false);
   };
 
   return (
@@ -81,7 +78,7 @@ export default function InstallCard() {
             </CardDescription>
         </CardHeader>
         <CardContent>
-            <Button className="w-full" onClick={handleInstallClick} disabled={!isInstallable}>
+            <Button className="w-full" onClick={handleInstallClick}>
               Install App on Your Device <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
         </CardContent>
