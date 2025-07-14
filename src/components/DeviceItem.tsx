@@ -47,7 +47,7 @@ const AudioFeatureSettingsDialog: React.FC<AudioFeatureSettingsDialogProps> = ({
     const hasSettings = device.supportedFeatures?.includes('spatialAudio');
 
     if (!hasSettings) {
-        return null;
+        return <>{children}</>;
     }
 
     const handleSaveChanges = () => {
@@ -74,19 +74,21 @@ const AudioFeatureSettingsDialog: React.FC<AudioFeatureSettingsDialogProps> = ({
                         <div className="space-y-4">
                             <h4 className="font-medium text-sm">Spatial Audio</h4>
                             <div className="flex items-center justify-between">
-                                <Label htmlFor="spatial-audio-switch">Enable Spatial Audio</Label>
-                                <Switch id="spatial-audio-switch" checked={spatialEnabled} onCheckedChange={setSpatialEnabled} />
+                                <Label htmlFor={`spatial-audio-switch-${device.id}`}>Enable Spatial Audio</Label>
+                                <Switch id={`spatial-audio-switch-${device.id}`} checked={spatialEnabled} onCheckedChange={setSpatialEnabled} />
                             </div>
                             {spatialEnabled && (
                                 <div className="flex items-center justify-between pl-4">
-                                <Label htmlFor="head-tracking-switch" className="text-muted-foreground">Enable Dynamic Head Tracking</Label>
-                                <Switch id="head-tracking-switch" checked={headTracking} onCheckedChange={setHeadTracking} />
+                                <Label htmlFor={`head-tracking-switch-${device.id}`} className="text-muted-foreground">Dynamic Head Tracking</Label>
+                                <Switch id={`head-tracking-switch-${device.id}`} checked={headTracking} onCheckedChange={setHeadTracking} />
                             </div>
                             )}
                         </div>
                     )}
                 </div>
-                <Button onClick={handleSaveChanges}>Save Changes</Button>
+                <DialogTrigger asChild>
+                    <Button onClick={handleSaveChanges}>Save Changes</Button>
+                </DialogTrigger>
             </DialogContent>
         </Dialog>
     );
@@ -111,12 +113,16 @@ export default function DeviceItem({
               <span className="font-medium">{device.name}</span>
             </div>
             <div className="flex items-center gap-2">
-                {hasFeatureSettings && device.selected && (
+                {hasFeatureSettings && device.selected ? (
                      <AudioFeatureSettingsDialog device={device} onSettingsChange={(newSettings) => onFeatureSettingsChange(device.id, newSettings)}>
                         <Button variant="ghost" size="icon" className="h-8 w-8">
                             <Settings className="h-4 w-4" />
                         </Button>
                     </AudioFeatureSettingsDialog>
+                ) : hasFeatureSettings && device.selected && (
+                  <Button variant="ghost" size="icon" className="h-8 w-8" disabled>
+                    <Settings className="h-4 w-4" />
+                  </Button>
                 )}
                 <Switch
                     checked={device.selected}
@@ -130,7 +136,7 @@ export default function DeviceItem({
             <div className="mt-3 flex flex-wrap items-center gap-2">
                 {device.supportedFeatures?.map(feature => (
                      <Badge key={feature} variant="secondary" className="gap-1.5 pr-2.5">
-                        <featureDisplay[feature].icon className="h-3 w-3" />
+                        {React.createElement(featureDisplay[feature].icon, { className: "h-3 w-3" })}
                         {featureDisplay[feature].name}
                     </Badge>
                 ))}
