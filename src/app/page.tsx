@@ -23,19 +23,13 @@ function InstallCard() {
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       setInstallPrompt(e);
-      setIsVisible(true);
+      // Only show the card if not already installed
+      if (!window.matchMedia('(display-mode: standalone)').matches) {
+        setIsVisible(true);
+      }
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-
-    // Also check if running as a PWA already
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setIsVisible(false);
-    } else {
-      // Small delay to allow the prompt to be set
-      setTimeout(() => setIsVisible(true), 1000);
-    }
-
 
     return () => {
       window.removeEventListener(
@@ -49,31 +43,33 @@ function InstallCard() {
     if (!installPrompt) {
       toast({
         variant: "destructive",
-        title: "Already Installed or Not Supported",
+        title: "Installation Not Available",
         description:
           "The app may already be installed, or your browser doesn't support this feature.",
       });
       return;
     }
+    
     installPrompt.prompt();
     const { outcome } = await installPrompt.userChoice;
+    
     if (outcome === "accepted") {
       toast({
         title: "Installation Complete!",
-        description: "SyncSphere has been added to your device.",
+        description: "SyncSphere has been successfully installed.",
       });
       setIsVisible(false);
     } else {
-      toast({
+       toast({
         title: "Installation Cancelled",
-        description: "You can install the app any time.",
+        description: "You can install the app any time from the main page.",
       });
     }
     setInstallPrompt(null);
   };
   
-  if (!isVisible && !installPrompt) {
-    return null; // Don't show the card if not applicable
+  if (!isVisible) {
+    return null;
   }
 
   return (
@@ -86,7 +82,7 @@ function InstallCard() {
             <CardTitle>Install SyncSphere</CardTitle>
             </div>
             <CardDescription>
-                Get the best experience by installing the SyncSphere app directly on your device. It's fast, works offline, and feels like a native app.
+                Get the best experience by installing the SyncSphere app on your device. It's fast, works offline, and feels like a native app.
             </CardDescription>
         </CardHeader>
         <CardContent>
