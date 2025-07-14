@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { Download, ArrowRight, HelpCircle, Wifi } from "lucide-react";
+import { Download, ArrowRight, Wifi } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -21,11 +21,11 @@ export default function InstallCard() {
 
   React.useEffect(() => {
     // Check if a service worker is active, which indicates offline capability
-    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+    if (navigator.serviceWorker?.controller) {
       setIsOfflineReady(true);
     }
     
-    // Check for PWA installability support
+    // Listen for the install prompt event
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       installPromptRef.current = e;
@@ -34,10 +34,9 @@ export default function InstallCard() {
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // This is a simple check; a more robust one might check user agent strings
-    if (typeof (window as any).InstallTrigger !== 'undefined') {
-      // This is Firefox, which supports offline but not the install prompt
-      setIsSupported(false);
+    // Detect if PWA installation is supported (basic check for the prompt event)
+    if (window.hasOwnProperty('BeforeInstallPromptEvent')) {
+       setIsSupported(true);
     }
 
     return () => {
@@ -54,7 +53,7 @@ export default function InstallCard() {
         variant: "destructive",
         title: "Installation Not Available",
         description:
-          "The app may already be installed or your browser doesn't fully support this feature. Try a browser like Chrome or Edge.",
+          "The app may already be installed or your browser doesn't fully support this feature. Try using Chrome or Edge.",
       });
       return;
     }
@@ -67,7 +66,7 @@ export default function InstallCard() {
     if (outcome === "accepted") {
       toast({
         title: "Installation Complete!",
-        description: "SyncSphere has been successfully installed.",
+        description: "SyncSphere has been successfully installed on your device.",
       });
     } else {
       toast({
@@ -77,6 +76,8 @@ export default function InstallCard() {
     }
 
     installPromptRef.current = null;
+    // Hide the button after interaction, as the prompt can't be shown again.
+    setIsSupported(false); 
   };
 
   return (
@@ -90,9 +91,9 @@ export default function InstallCard() {
         </div>
         <CardDescription>
           {isSupported
-            ? "Get the best experience by installing the SyncSphere app on your device. It's fast, works offline, and feels like a native app."
-            : "This app works offline! Just visit once while connected to the internet, and it will be ready for later use without a connection."}
-        </CardDescription>
+            ? "Get the best experience by installing SyncSphere on your device. It's fast, works offline, and feels like a native app."
+            : "This app is ready for offline use! Just visit once while connected to the internet, and it will be available without a connection."}
+        </card>
       </CardHeader>
       <CardContent>
           {isSupported ? (
