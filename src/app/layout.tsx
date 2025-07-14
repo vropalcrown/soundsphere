@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster"
 export const metadata: Metadata = {
   title: 'AudioSplit',
   description: 'Route audio and share video to multiple devices simultaneously.',
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
