@@ -70,6 +70,10 @@ export default function InstallCard() {
     setInstallPrompt(null);
   };
 
+  if (!installPrompt) {
+    return null;
+  }
+
   return (
      <Card className="md:col-span-2 border-primary/40 bg-primary/5">
         <CardHeader>
@@ -84,7 +88,7 @@ export default function InstallCard() {
             </CardDescription>
         </CardHeader>
         <CardContent>
-            <Button className="w-full" onClick={handleInstallClick} disabled={!installPrompt}>
+            <Button className="w-full" onClick={handleInstallClick}>
               Install App on Your Device <ArrowRight className="ml-2 h-4 w-4" />
             </Button>
         </CardContent>
