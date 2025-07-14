@@ -4,7 +4,7 @@
 import * as React from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy, WifiOff, History, RotateCw, Captions, Loader2, Languages, FileSearch } from "lucide-react";
+import { Play, Pause, MonitorSmartphone, Laptop, Tv, Users, Link as LinkIcon, Copy, WifiOff, History, RotateCw, Captions, Loader2, Languages, FileSearch, Maximize, Minimize } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import type { Viewer, VideoHistoryItem } from "@/types";
@@ -27,7 +27,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator as DropdownSeparator,
 } from "@/components/ui/dropdown-menu"
+import { Slider } from "@/components/ui/slider";
 
 const initialViewers: Viewer[] = [
     { id: "1", name: "Alice", location: "New York", device: "Mobile", status: "Playing", icon: MonitorSmartphone },
@@ -56,8 +59,15 @@ const videoTranscript = [
 
 export default function VideoShareCard() {
   const videoRef = React.useRef<HTMLVideoElement>(null);
+  const playerRef = React.useRef<HTMLDivElement>(null);
   const subtitleIntervalRef = React.useRef<NodeJS.Timeout>();
+
   const [isPlaying, setIsPlaying] = React.useState(false);
+  const [isBuffering, setIsBuffering] = React.useState(false);
+  const [progress, setProgress] = React.useState(0);
+  const [duration, setDuration] = React.useState(0);
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
   const [viewers, setViewers] = React.useState<Viewer[]>(initialViewers);
   const [history, setHistory] = React.useState<VideoHistoryItem[]>(initialHistory);
   const [currentVideo, setCurrentVideo] = React.useState({
@@ -85,6 +95,38 @@ export default function VideoShareCard() {
       }
     }
   };
+
+  const handleSeek = (value: number[]) => {
+    if (videoRef.current) {
+      videoRef.current.currentTime = (value[0] / 100) * duration;
+      setProgress(value[0]);
+    }
+  };
+
+  const formatTime = (timeInSeconds: number) => {
+    const minutes = Math.floor(timeInSeconds / 60);
+    const seconds = Math.floor(timeInSeconds % 60);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  const toggleFullscreen = () => {
+    if (!playerRef.current) return;
+
+    if (!document.fullscreenElement) {
+        playerRef.current.requestFullscreen().catch(err => {
+        alert(`Error attempting to enable full-screen mode: ${err.message} (${err.name})`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const handlePlaybackSpeedChange = (speed: number) => {
+    if (videoRef.current) {
+        videoRef.current.playbackRate = speed;
+    }
+  };
+
 
   const fetchAndSetSubtitle = React.useCallback(async () => {
     setIsGeneratingSubtitle(true);
@@ -143,27 +185,45 @@ export default function VideoShareCard() {
 
     const handlePlay = () => {
       setIsPlaying(true);
+      setIsBuffering(false);
       updateViewerStatus("Playing");
     };
     const handlePause = () => {
       setIsPlaying(false);
+      setIsBuffering(false);
       updateViewerStatus("Paused");
     };
     const handleWaiting = () => {
+      setIsBuffering(true);
       updateViewerStatus("Buffering");
     }
+    const handleTimeUpdate = () => {
+        setProgress((video.currentTime / video.duration) * 100);
+    };
+    const handleLoadedMetadata = () => {
+        setDuration(video.duration);
+    };
+    const handleFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement);
+    };
 
     video.addEventListener("play", handlePlay);
     video.addEventListener("pause", handlePause);
     video.addEventListener("waiting", handleWaiting);
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
 
 
     return () => {
       video.removeEventListener("play", handlePlay);
       video.removeEventListener("pause", handlePause);
       video.removeEventListener("waiting", handleWaiting);
+      video.removeEventListener("timeupdate", handleTimeUpdate);
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleCopyLink = () => {
     navigator.clipboard.writeText(shareLink);
@@ -234,30 +294,44 @@ export default function VideoShareCard() {
         <CardDescription>Share and sync video with friends, whether they're in the same room or across the globe.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="relative aspect-video rounded-lg overflow-hidden border bg-muted">
+        <div ref={playerRef} className="group relative aspect-video rounded-lg overflow-hidden border bg-muted">
           <video
             ref={videoRef}
             key={currentVideo.src}
             className="w-full h-full object-cover"
             poster={currentVideo.poster}
             data-ai-hint="nature movie"
+            onClick={togglePlayPause}
+            onDoubleClick={toggleFullscreen}
             controls={false}
           >
             <source src={currentVideo.src} type="video/mp4" />
           </video>
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent flex flex-col justify-end">
+          <div className="absolute inset-0 flex flex-col justify-between bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+             {/* Top bar (for title maybe) - Empty for now */}
+            <div></div>
+            {/* Center play/pause button */}
             <div className="flex-grow flex items-center justify-center">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="w-16 h-16 text-white/80 hover:text-white hover:bg-white/20 rounded-full"
-                onClick={togglePlayPause}
-              >
-                {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8" />}
-              </Button>
+              {isBuffering ? (
+                <Loader2 className="w-12 h-12 text-white/80 animate-spin" />
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    "w-16 h-16 text-white/80 hover:text-white hover:bg-white/20 rounded-full transition-all duration-300",
+                    isPlaying ? "opacity-0 group-hover:opacity-100" : "opacity-100"
+                  )}
+                  onClick={togglePlayPause}
+                >
+                  {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8" />}
+                </Button>
+              )}
             </div>
+            
+            {/* Subtitles */}
             {areSubtitlesEnabled && (
-              <div className="text-center p-4 text-white text-lg font-semibold drop-shadow-lg h-20 flex items-center justify-center">
+              <div className="text-center pb-4 px-4 text-white text-lg font-semibold drop-shadow-lg h-24 flex items-center justify-center">
                 {isGeneratingSubtitle && !currentSubtitle ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
                 ) : (
@@ -265,27 +339,68 @@ export default function VideoShareCard() {
                 )}
               </div>
             )}
-            <div className="p-2 flex items-center justify-end gap-2">
-                <Button variant="ghost" size="icon" onClick={handleFindSubtitles} disabled={isFindingSubtitles} className="text-white/80 hover:text-white hover:bg-white/20">
-                    {isFindingSubtitles ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileSearch className="w-5 h-5" />}
-                </Button>
-                <Button variant={areSubtitlesEnabled ? "secondary" : "ghost"} size="icon" onClick={toggleSubtitles} className="text-white/80 hover:text-white hover:bg-white/20">
-                    <Captions className="w-5 h-5" />
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" disabled={!areSubtitlesEnabled} className="text-white/80 hover:text-white hover:bg-white/20">
-                        <Languages className="w-5 h-5" />
+            
+            {/* Custom Controls */}
+            <div className="p-3 bg-gradient-to-t from-black/70 via-black/40 to-transparent">
+                <div className="flex items-center gap-3">
+                    <span className="text-white text-xs font-mono">{formatTime(videoRef.current?.currentTime ?? 0)}</span>
+                    <Slider
+                        value={[progress]}
+                        onValueChange={handleSeek}
+                        max={100}
+                        step={0.1}
+                        className="w-full"
+                    />
+                    <span className="text-white text-xs font-mono">{formatTime(duration)}</span>
+                </div>
+              <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={togglePlayPause} className="text-white/80 hover:text-white hover:bg-white/20">
+                        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
                     </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent>
-                    <DropdownMenuItem onClick={() => setSubtitleLanguage(undefined)}>English (Generated)</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSubtitleLanguage('Spanish')}>Spanish</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSubtitleLanguage('French')}>French</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSubtitleLanguage('Japanese')}>Japanese</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => setSubtitleLanguage('German')}>German</DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={handleFindSubtitles} disabled={isFindingSubtitles} className="text-white/80 hover:text-white hover:bg-white/20">
+                        {isFindingSubtitles ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileSearch className="w-5 h-5" />}
+                    </Button>
+                    <Button variant={areSubtitlesEnabled ? "secondary" : "ghost"} size="icon" onClick={toggleSubtitles} className="text-white/80 hover:text-white hover:bg-white/20">
+                        <Captions className="w-5 h-5" />
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="text-white/80 hover:text-white hover:bg-white/20">
+                            <Languages className="w-5 h-5" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent>
+                        <DropdownMenuLabel>AI Generated Subtitles</DropdownMenuLabel>
+                        <DropdownSeparator />
+                        <DropdownMenuItem onClick={() => setSubtitleLanguage(undefined)} disabled={!areSubtitlesEnabled}>English (Default)</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSubtitleLanguage('Spanish')} disabled={!areSubtitlesEnabled}>Spanish</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSubtitleLanguage('French')} disabled={!areSubtitlesEnabled}>French</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSubtitleLanguage('Japanese')} disabled={!areSubtitlesEnabled}>Japanese</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSubtitleLanguage('German')} disabled={!areSubtitlesEnabled}>German</DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="text-white/80 hover:text-white hover:bg-white/20">
+                                <span className="text-xs font-bold">{videoRef.current?.playbackRate ?? 1}x</span>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent>
+                           <DropdownMenuItem onClick={() => handlePlaybackSpeedChange(0.5)}>0.5x</DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => handlePlaybackSpeedChange(1)}>1x (Normal)</DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => handlePlaybackSpeedChange(1.5)}>1.5x</DropdownMenuItem>
+                           <DropdownMenuItem onClick={() => handlePlaybackSpeedChange(2)}>2x</DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                    <Button variant="ghost" size="icon" onClick={toggleFullscreen} className="text-white/80 hover:text-white hover:bg-white/20">
+                        {isFullscreen ? <Minimize className="w-5 h-5" /> : <Maximize className="w-5 h-5" />}
+                    </Button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -392,5 +507,3 @@ export default function VideoShareCard() {
     </Card>
   );
 }
-
-    
