@@ -20,30 +20,25 @@ export default function InstallCard() {
   const { toast } = useToast();
 
   React.useEffect(() => {
-    // Check if a service worker is active, which indicates offline capability
+    // Check if the Service Worker is ready for offline use
     if (navigator.serviceWorker?.controller) {
       setIsOfflineReady(true);
     }
     
-    // Listen for the install prompt event
+    // Check for 'beforeinstallprompt' event support
     const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the browser's default install prompt
       e.preventDefault();
+      // Stash the event so it can be triggered later.
       installPromptRef.current = e;
+      // Set the flag to indicate PWA installation is supported.
       setIsSupported(true);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
-    // Detect if PWA installation is supported (basic check for the prompt event)
-    if (window.hasOwnProperty('BeforeInstallPromptEvent')) {
-       setIsSupported(true);
-    }
-
     return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        handleBeforeInstallPrompt
-      );
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
     };
   }, []);
 
@@ -52,8 +47,7 @@ export default function InstallCard() {
       toast({
         variant: "destructive",
         title: "Installation Not Available",
-        description:
-          "The app may already be installed or your browser doesn't fully support this feature. Try using Chrome or Edge.",
+        description: "The app may already be installed or your browser doesn't support this feature.",
       });
       return;
     }
@@ -75,9 +69,9 @@ export default function InstallCard() {
       });
     }
 
+    // Clear the deferred prompt, it can't be used again.
     installPromptRef.current = null;
-    // Hide the button after interaction, as the prompt can't be shown again.
-    setIsSupported(false); 
+    setIsSupported(false); // The button will be removed after the choice is made
   };
 
   return (
@@ -93,7 +87,7 @@ export default function InstallCard() {
           {isSupported
             ? "Get the best experience by installing SyncSphere on your device. It's fast, works offline, and feels like a native app."
             : "This app is ready for offline use! Just visit once while connected to the internet, and it will be available without a connection."}
-        </card>
+        </CardDescription>
       </CardHeader>
       <CardContent>
           {isSupported ? (
