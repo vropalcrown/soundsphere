@@ -10,26 +10,18 @@ import type { AudioDevice } from "@/types";
 import DeviceItem from "@/components/DeviceItem";
 import { getSuggestedVolumes } from "@/app/actions";
 
-const initialDevices: AudioDevice[] = [
-  { id: "1", name: "Realtek HD Audio", type: "speakers", selected: true, volume: 75, supportedFeatures: ["stereo"] },
-  { id: "2", name: "Logitech Pro X", type: "headphones", selected: false, volume: 30, supportedFeatures: ["stereo"] },
-  { id: "3", name: "NVIDIA Broadcast", type: "microphone", selected: false, volume: 60 },
-  { id: "4", name: "SteelSeries Sonar", type: "other", selected: false, volume: 50 },
-  { id: "5", name: "Sony WH-1000XM4", type: "headphones", selected: false, volume: 40, supportedFeatures: ["spatialAudio", "stereo"], featureSettings: { spatialAudio: { enabled: false, headTracking: true } } },
-  { id: "6", name: "Monitor Speakers", type: "speakers", selected: false, volume: 80, supportedFeatures: ["stereo"] },
-  { id: "7", name: "Blue Yeti", type: "microphone", selected: true, volume: 65 },
-  { id: "8", name: "Home Theatre System", type: "other", selected: false, volume: 85, supportedFeatures: ["dolbyAtmos", "stereo"] },
-];
+const initialDevices: AudioDevice[] = [];
 
 export default function AudioOutputGroupCard() {
   const [devices, setDevices] = React.useState<AudioDevice[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSuggesting, setIsSuggesting] = React.useState(false);
-  const [isScanning, setIsScanning] = React.useState(false);
+
   const { toast } = useToast();
 
   React.useEffect(() => {
     try {
+      // In a real app, you would fetch this from the system API.
       const savedConfig = localStorage.getItem("audioSplitConfig");
       if (savedConfig) {
         setDevices(JSON.parse(savedConfig));
@@ -128,35 +120,6 @@ export default function AudioOutputGroupCard() {
     }
   };
 
-  const handleScanForDevices = () => {
-    setIsScanning(true);
-    toast({
-      title: "Scanning for devices...",
-      description: "Looking for new Bluetooth devices in range.",
-    });
-
-    setTimeout(() => {
-      const newDevice: AudioDevice = {
-        id: (devices.length + 1).toString(),
-        name: "Bose QuietComfort",
-        type: "headphones",
-        selected: false,
-        volume: 50,
-        supportedFeatures: ["spatialAudio", "stereo"],
-        featureSettings: { spatialAudio: { enabled: true, headTracking: false } }
-      };
-
-      setDevices(prev => [...prev, newDevice]);
-
-      toast({
-        title: "Device Found!",
-        description: `${newDevice.name} has been added to your device list.`,
-      });
-
-      setIsScanning(false);
-    }, 2000);
-  };
-
   const selectedDevicesCount = devices.filter(d => d.selected).length;
   
   return (
@@ -165,19 +128,11 @@ export default function AudioOutputGroupCard() {
         <div>
           <CardTitle>Audio Output Group</CardTitle>
           <CardDescription>
-            {selectedDevicesCount > 0 ? `${selectedDevicesCount} device${selectedDevicesCount > 1 ? 's' : ''} selected` : 'No devices selected'}
+            {selectedDevicesCount > 0 ? `${selectedDevicesCount} device${selectedDevicesCount > 1 ? 's' : ''} selected` : 'Select devices to route audio to'}
           </CardDescription>
         </div>
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button onClick={handleScanForDevices} disabled={isScanning} variant="outline" className="w-full sm:w-auto">
-            {isScanning ? (
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            ) : (
-              <Bluetooth className="mr-2 h-4 w-4" />
-            )}
-            Scan
-          </Button>
-          <Button onClick={handleSuggestVolumes} disabled={isSuggesting || isScanning} className="w-full sm:w-auto">
+          <Button onClick={handleSuggestVolumes} disabled={isSuggesting} className="w-full sm:w-auto">
             {isSuggesting ? (
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
             ) : (
@@ -206,7 +161,7 @@ export default function AudioOutputGroupCard() {
               ))
             ) : (
               <p className="text-center text-muted-foreground py-8">
-                No audio devices detected.
+                No audio devices detected. In a real app, this list would be populated by your system.
               </p>
             )}
           </div>

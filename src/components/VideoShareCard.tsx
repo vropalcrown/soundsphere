@@ -32,17 +32,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Slider } from "@/components/ui/slider";
 
-const initialViewers: Viewer[] = [
-    { id: "1", name: "Alice", location: "New York", device: "Mobile", status: "Playing", icon: MonitorSmartphone },
-    { id: "2", name: "Bob", location: "London", device: "Laptop", status: "Playing", icon: Laptop },
-    { id: "3", name: "Charlie", location: "Tokyo", device: "TV", status: "Playing", icon: Tv },
-  ];
+const initialViewers: Viewer[] = [];
+const initialHistory: VideoHistoryItem[] = [];
 
-const initialHistory: VideoHistoryItem[] = [
-  { id: "1", title: "Elephants Dream", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4", poster: "https://placehold.co/1280x720.png" },
-  { id: "2", title: "For All Mankind", src: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4", poster: "https://placehold.co/1280x720.png" },
-];
-
+// In a real app, this would be a live transcript feed.
 const videoTranscript = [
   "so what do you think",
   "i dont know it looks kind of shabby",
@@ -414,7 +407,7 @@ export default function VideoShareCard() {
                 Synced Viewers ({viewers.length})
               </h3>
               <div className="space-y-2">
-                {viewers.map((viewer) => (
+                {viewers.length > 0 ? viewers.map((viewer) => (
                   <div key={viewer.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/50">
                     <div className="flex items-center gap-3">
                       <viewer.icon className="w-5 h-5 text-muted-foreground" />
@@ -433,7 +426,9 @@ export default function VideoShareCard() {
                       {viewer.status}
                     </Badge>
                   </div>
-                ))}
+                )) : (
+                  <p className="text-center text-muted-foreground pt-4 text-sm">No other viewers have joined.</p>
+                )}
               </div>
             </div>
 
@@ -443,7 +438,7 @@ export default function VideoShareCard() {
                 Watch History
               </h3>
               <div className="space-y-2">
-                {history.map((video) => (
+                {history.length > 0 ? history.map((video) => (
                   <div key={video.id} className="flex items-center justify-between p-2 rounded-md bg-secondary/50">
                     <div className="flex items-center gap-3">
                       <div className="text-sm">
@@ -455,7 +450,9 @@ export default function VideoShareCard() {
                         Load
                     </Button>
                   </div>
-                ))}
+                )) : (
+                     <p className="text-center text-muted-foreground pt-4 text-sm">Your watch history is empty.</p>
+                )}
               </div>
             </div>
         </div>
