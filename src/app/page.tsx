@@ -12,8 +12,53 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Home() {
+  const [installPrompt, setInstallPrompt] = React.useState<any>(null);
+  const { toast } = useToast();
+
+  React.useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt
+      );
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!installPrompt) {
+      toast({
+        variant: "destructive",
+        title: "Installation Not Available",
+        description: "Your browser does not support PWA installation, or the app is already installed.",
+      });
+      return;
+    }
+    installPrompt.prompt();
+    const { outcome } = await installPrompt.userChoice;
+    if (outcome === "accepted") {
+      toast({
+        title: "Installation Complete!",
+        description: "SyncSphere has been added to your device.",
+      });
+    } else {
+       toast({
+        title: "Installation Cancelled",
+        description: "You can install the app any time from the address bar.",
+      });
+    }
+    setInstallPrompt(null);
+  };
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12 bg-background">
       <div className="w-full max-w-4xl space-y-8">
@@ -82,26 +127,26 @@ export default function Home() {
           </Card>
         </div>
 
-        <Card className="col-span-1 md:col-span-2 hover:border-primary/60 transition-colors bg-card/50 border-dashed">
-            <CardHeader className="text-center">
-                 <div className="flex flex-col items-center gap-3 mb-2">
-                    <div className="p-2 bg-primary/10 rounded-md">
-                        <Download className="h-6 w-6 text-primary" />
-                    </div>
-                    <CardTitle>Get the App</CardTitle>
-                </div>
-                <CardDescription>
-                    Install SyncSphere on your desktop or mobile device for a native-like experience.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="flex justify-center">
-                <Link href="/download" passHref>
-                    <Button variant="secondary" className="w-full sm:w-auto">
-                        View Install Instructions <ArrowRight className="ml-2 h-4 w-4" />
-                    </Button>
-                </Link>
-            </CardContent>
-        </Card>
+        {installPrompt && (
+          <Card className="col-span-1 md:col-span-2 hover:border-primary/60 transition-colors bg-card/50 border-dashed">
+              <CardHeader className="text-center">
+                   <div className="flex flex-col items-center gap-3 mb-2">
+                      <div className="p-2 bg-primary/10 rounded-md">
+                          <Download className="h-6 w-6 text-primary" />
+                      </div>
+                      <CardTitle>Get the App</CardTitle>
+                  </div>
+                  <CardDescription>
+                      Install SyncSphere on your desktop or mobile device for a native-like experience.
+                  </CardDescription>
+              </CardHeader>
+              <CardContent className="flex justify-center">
+                  <Button variant="secondary" className="w-full sm:w-auto" onClick={handleInstallClick}>
+                      Install App <Download className="ml-2 h-4 w-4" />
+                  </Button>
+              </CardContent>
+          </Card>
+        )}
 
       </div>
     </main>
