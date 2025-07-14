@@ -20,7 +20,9 @@ export default function Home() {
 
   React.useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
+      // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
+      // Stash the event so it can be triggered later.
       setInstallPrompt(e);
     };
 
@@ -36,14 +38,16 @@ export default function Home() {
 
   const handleInstallClick = async () => {
     if (!installPrompt) {
-      toast({
+       toast({
         variant: "destructive",
         title: "Installation Not Available",
         description: "Your browser does not support PWA installation, or the app is already installed.",
       });
       return;
     }
+    // Show the install prompt
     installPrompt.prompt();
+    // Wait for the user to respond to the prompt
     const { outcome } = await installPrompt.userChoice;
     if (outcome === "accepted") {
       toast({
@@ -56,6 +60,7 @@ export default function Home() {
         description: "You can install the app any time from the address bar.",
       });
     }
+    // We've used the prompt, and can't use it again, so clear it
     setInstallPrompt(null);
   };
 
